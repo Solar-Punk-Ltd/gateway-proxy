@@ -15,16 +15,16 @@ import {
 describe('getAppConfig', () => {
   it('should return default values', () => {
     const config = getAppConfig()
-    expect(config.beeApiUrl).toEqual(DEFAULT_BEE_API_URL)
+    expect(config.beeApiUrls).toEqual(DEFAULT_BEE_API_URL)
     expect(config.authorization).toBeUndefined()
   })
 
   it('should set beeUrl and authorization', () => {
-    const BEE_API_URL = 'http://whatever.local'
+    const BEE_API_URLS = 'http://whatever.local'
     const AUTH_SECRET = 'some_super_secret_string'
 
-    const config = getAppConfig({ BEE_API_URL, AUTH_SECRET })
-    expect(config.beeApiUrl).toEqual(BEE_API_URL)
+    const config = getAppConfig({ BEE_API_URLS, AUTH_SECRET })
+    expect(config.beeApiUrls[0]).toEqual(BEE_API_URLS)
     expect(config.authorization).toEqual(AUTH_SECRET)
   })
 
@@ -64,7 +64,7 @@ describe('getStampsConfig', () => {
   const POSTAGE_STAMP = 'f1e4ff753ea1cb923269ed0cda909d13a10d624719edf261e196584e9e764e50'
   const POSTAGE_AMOUNT = '414720000'
   const POSTAGE_DEPTH = '20'
-  const BEE_API_URL = 'http://localhost:1633'
+  const BEE_API_URLS = 'http://localhost:1633'
   const POSTAGE_USAGE_THRESHOLD = '0.6'
   const POSTAGE_USAGE_MAX = '0.8'
   const POSTAGE_TTL_MIN = '200'
@@ -90,7 +90,7 @@ describe('getStampsConfig', () => {
         mode: 'autobuy',
         depth: Number(POSTAGE_DEPTH),
         amount: POSTAGE_AMOUNT,
-        beeApiUrl: BEE_API_URL,
+        beeApiUrls: [BEE_API_URLS],
         usageThreshold: DEFAULT_POSTAGE_USAGE_THRESHOLD,
         usageMax: DEFAULT_POSTAGE_USAGE_MAX,
         ttlMin: (DEFAULT_POSTAGE_REFRESH_PERIOD / 1000) * 5,
@@ -102,7 +102,7 @@ describe('getStampsConfig', () => {
       env: {
         POSTAGE_AMOUNT,
         POSTAGE_DEPTH,
-        BEE_API_URL,
+        BEE_API_URLS,
         POSTAGE_USAGE_MAX,
         POSTAGE_USAGE_THRESHOLD,
         POSTAGE_TTL_MIN,
@@ -112,7 +112,7 @@ describe('getStampsConfig', () => {
         mode: 'autobuy',
         depth: Number(POSTAGE_DEPTH),
         amount: POSTAGE_AMOUNT,
-        beeApiUrl: BEE_API_URL,
+        beeApiUrls: [BEE_API_URLS],
         usageThreshold: Number(POSTAGE_USAGE_THRESHOLD),
         usageMax: Number(POSTAGE_USAGE_MAX),
         ttlMin: Number(POSTAGE_TTL_MIN),
@@ -127,7 +127,7 @@ describe('getStampsConfig', () => {
         mode: 'autobuy',
         depth: Number(POSTAGE_DEPTH),
         amount: POSTAGE_AMOUNT,
-        beeApiUrl: BEE_API_URL,
+        beeApiUrls: [BEE_API_URLS],
         usageThreshold: DEFAULT_POSTAGE_USAGE_THRESHOLD,
         usageMax: DEFAULT_POSTAGE_USAGE_MAX,
         ttlMin: (Number(POSTAGE_REFRESH_PERIOD) / 1000) * 5,
@@ -146,7 +146,7 @@ describe('getStampsConfig', () => {
         mode: 'extendsTTL',
         depth: Number(POSTAGE_DEPTH),
         amount: POSTAGE_AMOUNT,
-        beeApiUrl: BEE_API_URL || DEFAULT_BEE_API_URL,
+        beeApiUrls: BEE_API_URLS? [BEE_API_URLS] : [DEFAULT_BEE_API_URL],
         ttlMin: Number(POSTAGE_TTL_MIN),
         refreshPeriod: Number(POSTAGE_REFRESH_PERIOD),
       },
@@ -163,7 +163,7 @@ describe('getStampsConfig', () => {
         mode: 'extendsTTL',
         depth: Number(POSTAGE_DEPTH),
         amount: POSTAGE_AMOUNT,
-        beeApiUrl: BEE_API_URL,
+        beeApiUrls: [BEE_API_URLS],
         ttlMin: Number(POSTAGE_TTL_MIN),
         refreshPeriod: Number(POSTAGE_REFRESH_PERIOD),
       },

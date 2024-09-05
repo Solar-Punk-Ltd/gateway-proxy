@@ -73,7 +73,7 @@ describe('postageStamp', () => {
         POSTAGE_DEPTH: defaultDepth.toString(),
         POSTAGE_AMOUNT: defaultAmount.toString(),
         POSTAGE_REFRESH_PERIOD: '200',
-        BEE_API_URL: url,
+        BEE_API_URLS: url,
       })!,
     )
     await System.sleepMillis(1_000)
@@ -92,7 +92,7 @@ describe('postageStamp', () => {
         POSTAGE_DEPTH: defaultDepth.toString(),
         POSTAGE_AMOUNT: defaultAmount.toString(),
         POSTAGE_REFRESH_PERIOD: '200',
-        BEE_API_URL: url,
+        BEE_API_URLS: url,
       })!,
     )
     await System.sleepMillis(1_000)
@@ -113,7 +113,7 @@ describe('postageStamp', () => {
         POSTAGE_DEPTH: defaultDepth.toString(),
         POSTAGE_AMOUNT: defaultAmount.toString(),
         POSTAGE_REFRESH_PERIOD: '200',
-        BEE_API_URL: url,
+        BEE_API_URLS: url,
       })!,
     )
 
@@ -136,7 +136,7 @@ describe('postageStamp', () => {
         POSTAGE_AMOUNT: defaultAmount.toString(),
         POSTAGE_REFRESH_PERIOD: '200',
         POSTAGE_USAGE_MAX: '0.8',
-        BEE_API_URL: url,
+        BEE_API_URLS: url,
       })!,
     )
 

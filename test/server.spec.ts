@@ -8,14 +8,15 @@ import { StampsManager } from '../src/stamps'
 import { createHeaderCheckMockServer } from './header-check.mockserver'
 import { bee, getPostageBatch, makeCollectionFromFS } from './utils'
 
+const beeApiUrls =  process.env.BEE_API_URLS ? process.env.BEE_API_URLS.split(',') : ['http://localhost:1633']
 const beeApiUrl = process.env.BEE_API_URL || 'http://localhost:1633'
-const beeApiUrlWrong = process.env.BEE_API_URL_WRONG || 'http://localhost:2021'
+const beeApiUrlWrong = process.env.BEE_API_URLS_WRONG?  process.env.BEE_API_URLS_WRONG.split(',') :  ['http://localhost:2021']
 const authorization = process.env.AUTH_SECRET || 'super_secret_token'
 
-const app = createApp({ beeApiUrl })
-const appWrong = createApp({ beeApiUrl: beeApiUrlWrong })
-const appAuth = createApp({ beeApiUrl, authorization })
-const appAuthWrong = createApp({ beeApiUrl: beeApiUrlWrong, authorization })
+const app = createApp({ beeApiUrls })
+const appWrong = createApp({ beeApiUrls: beeApiUrlWrong })
+const appAuth = createApp({ beeApiUrls, authorization })
+const appAuthWrong = createApp({ beeApiUrls: beeApiUrlWrong, authorization })
 
 let proxy: Server
 let proxyAuth: Server
@@ -37,7 +38,7 @@ beforeAll(async () => {
   const stamp = getPostageBatch()
   const stampManager = new StampsManager()
   await stampManager.start({ mode: 'hardcoded', stamp })
-  const appWithStamp = createApp({ beeApiUrl }, stampManager)
+  const appWithStamp = createApp({ beeApiUrls }, stampManager)
   proxyWithStamp = await new Promise((resolve, _reject) => {
     const server = appWithStamp.listen(async () => resolve(server))
   })
@@ -54,7 +55,7 @@ beforeAll(async () => {
   const headerServerPort = (headerServer.address() as AddressInfo).port
   headerProxy = await new Promise((resolve, _reject) => {
     const server = createApp({
-      beeApiUrl: `http://localhost:${headerServerPort}`,
+      beeApiUrls: [`http://localhost:${headerServerPort}`],
       removePinHeader: true,
     }).listen(async () => resolve(server))
   })

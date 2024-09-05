@@ -14,8 +14,10 @@ const BAD_PATH = `bzz/${'00'.repeat(32)}`
 const SWARM_STAMP_HEADER = 'swarm-postage-batch-id'
 const SWARM_PIN_HEADER = 'swarm-pin'
 
+let beeApiUrlIx = 0
+
 interface Options {
-  beeApiUrl: string
+  beeApiUrls: string[]
   removePinHeader: boolean
   stampManager: StampsManager | null
   allowlist?: string[]
@@ -80,6 +82,8 @@ async function fetchAndRespond(
   res: Response,
   options: Options,
 ) {
+  const beeApiUrl = nextBeeUrl(options)
+
   if (options.removePinHeader) {
     delete headers[SWARM_PIN_HEADER]
   }
@@ -90,7 +94,7 @@ async function fetchAndRespond(
     }
     let response = await axios({
       method,
-      url: Strings.joinUrl(options.beeApiUrl, path) + Objects.toQueryString(query, true),
+      url: Strings.joinUrl(beeApiUrl, path) + Objects.toQueryString(query, true),
       data: body,
       headers,
       timeout: Dates.minutes(20),
@@ -100,7 +104,7 @@ async function fetchAndRespond(
     })
 
     if (response.status === 404 || (response.status >= 300 && response.status < 400)) {
-      const url = Strings.joinUrl(options.beeApiUrl, path) + '.html' + Objects.toQueryString(query, true)
+      const url = Strings.joinUrl(beeApiUrl, path) + '.html' + Objects.toQueryString(query, true)
       const probeResponse = await axios({
         method,
         url,
@@ -165,4 +169,10 @@ async function fetchAndRespond(
     res.status(500).send('Internal server error')
     logger.error(`proxy failed: ${getErrorMessage(error)}`)
   }
+}
+
+function nextBeeUrl(options: Options) {
+  beeApiUrlIx = (beeApiUrlIx + 1) % options.beeApiUrls.length
+
+  return options.beeApiUrls[beeApiUrlIx]
 }

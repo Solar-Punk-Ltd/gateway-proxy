@@ -55,7 +55,11 @@ export class ContentManager {
    * Start the manager that checks for pinned content availability and reuploads the data if needed.
    */
   start(config: ContentConfig): void {
-    const refreshContent = async () => this.attemptRefreshContentReupload(new Bee(config.beeApiUrl))
+    const refreshContent = async () => {
+      for (const beeApiUrl of config.beeApiUrls) {
+        await this.attemptRefreshContentReupload(new Bee(beeApiUrl))
+      }
+    }
     this.stop()
     refreshContent()
 

@@ -25,7 +25,7 @@ afterAll(() => {
 
 test('should return hashed identity in header', async () => {
   const app = createApp({
-    beeApiUrl: 'http://localhost:3999',
+    beeApiUrls: ['http://localhost:3999'],
     exposeHashedIdentity: true,
   })
   let tries = 0

@@ -14,7 +14,7 @@ import type { StampsManager } from './stamps'
 export const createApp = (
   {
     hostname,
-    beeApiUrl,
+    beeApiUrls,
     allowlist,
     authorization,
     cidSubdomains,
@@ -26,7 +26,8 @@ export const createApp = (
   }: AppConfig,
   stampManager?: StampsManager,
 ): Application => {
-  const bee = new Bee(beeApiUrl)
+  logger.info('bee_api_urls', {beeApiUrls})
+  const bee = new Bee(beeApiUrls[0])
 
   // Create Express Server
   const app = express()
@@ -57,7 +58,7 @@ export const createApp = (
 
   // Register hashed identity
   if (exposeHashedIdentity) {
-    const bee = new Bee(beeApiUrl)
+    const bee = new Bee(beeApiUrls[0])
     fetchBeeIdentity(bee)
     app.use((_, res, next) => {
       res.set(HASHED_IDENTITY_HEADER, getHashedIdentity())
@@ -130,7 +131,7 @@ export const createApp = (
   })
 
   createProxyEndpoints(app, {
-    beeApiUrl,
+    beeApiUrls,
     removePinHeader: removePinHeader ?? true,
     stampManager: stampManager ?? null,
     allowlist,
@@ -148,7 +149,7 @@ export const createApp = (
   if (homepage) {
     app.use(async (req, res, next) => {
       try {
-        const url = Strings.joinUrl(beeApiUrl, 'bzz', homepage, req.url)
+        const url = Strings.joinUrl(beeApiUrls[0], 'bzz', homepage, req.url)
         logger.info('attempting to fetch homepage', { url })
 
         // attempt to fetch homepage

@@ -1,5 +1,5 @@
 export interface AppConfig {
-  beeApiUrl: string
+  beeApiUrls: string[]
   authorization?: string
   allowlist?: string[]
   hostname?: string
@@ -26,11 +26,11 @@ export interface StampsConfigExtends {
   depth: number
   amount: string
   refreshPeriod: number
-  beeApiUrl: string
+  beeApiUrls: string[]
 }
 
 export interface ContentConfigReupload {
-  beeApiUrl: string
+  beeApiUrls: string[]
   refreshPeriod: number
 }
 
@@ -38,7 +38,7 @@ export interface StampsConfigAutobuy {
   mode: 'autobuy'
   depth: number
   amount: string
-  beeApiUrl: string
+  beeApiUrls: string[]
   usageThreshold: number
   usageMax: number
   ttlMin: number
@@ -54,7 +54,7 @@ export type EnvironmentVariables = Partial<{
   LOG_LEVEL: string
 
   // Proxy
-  BEE_API_URL: string
+  BEE_API_URLS: string
   AUTH_SECRET: string
   ALLOWLIST: string
 
@@ -110,7 +110,7 @@ export const logLevel =
     : DEFAULT_LOG_LEVEL
 
 export function getAppConfig({
-  BEE_API_URL,
+  BEE_API_URLS,
   AUTH_SECRET,
   ALLOWLIST,
   CID_SUBDOMAINS,
@@ -123,7 +123,7 @@ export function getAppConfig({
 }: EnvironmentVariables = {}): AppConfig {
   return {
     hostname: HOSTNAME || DEFAULT_HOSTNAME,
-    beeApiUrl: BEE_API_URL || DEFAULT_BEE_API_URL,
+    beeApiUrls: BEE_API_URLS ? BEE_API_URLS.split(',') : [DEFAULT_BEE_API_URL],
     authorization: AUTH_SECRET,
     allowlist: ALLOWLIST ? ALLOWLIST.split(',') : undefined,
     cidSubdomains: CID_SUBDOMAINS === 'true',
@@ -140,7 +140,7 @@ export function getServerConfig({ PORT, HOSTNAME }: EnvironmentVariables = {}): 
 }
 
 export function getStampsConfig({
-  BEE_API_URL,
+  BEE_API_URLS,
   POSTAGE_STAMP,
   POSTAGE_DEPTH,
   POSTAGE_AMOUNT,
@@ -151,7 +151,7 @@ export function getStampsConfig({
   POSTAGE_EXTENDSTTL,
 }: EnvironmentVariables = {}): StampsConfig | undefined {
   const refreshPeriod = Number(POSTAGE_REFRESH_PERIOD || DEFAULT_POSTAGE_REFRESH_PERIOD)
-  const beeApiUrl = BEE_API_URL || DEFAULT_BEE_API_URL
+  const beeApiUrls = BEE_API_URLS ? BEE_API_URLS.split(',') : [DEFAULT_BEE_API_URL]
 
   // Start in hardcoded mode
   if (POSTAGE_STAMP) return { mode: 'hardcoded', stamp: POSTAGE_STAMP }
@@ -165,7 +165,7 @@ export function getStampsConfig({
       usageMax: Number(POSTAGE_USAGE_MAX || DEFAULT_POSTAGE_USAGE_MAX),
       ttlMin: Number(POSTAGE_TTL_MIN || (refreshPeriod / 1000) * 5),
       refreshPeriod,
-      beeApiUrl,
+      beeApiUrls,
     }
   } else if (
     POSTAGE_EXTENDSTTL === 'true' &&
@@ -179,7 +179,7 @@ export function getStampsConfig({
       ttlMin: Number(POSTAGE_TTL_MIN),
       amount: POSTAGE_AMOUNT,
       refreshPeriod,
-      beeApiUrl,
+      beeApiUrls,
     }
   }
   // Missing one of the variables needed for the autobuy or extends TTL
@@ -195,13 +195,13 @@ export function getStampsConfig({
   return undefined
 }
 
-export function getContentConfig({ BEE_API_URL, REUPLOAD_PERIOD }: EnvironmentVariables = {}): ContentConfig | false {
+export function getContentConfig({ BEE_API_URLS, REUPLOAD_PERIOD }: EnvironmentVariables = {}): ContentConfig | false {
   if (!REUPLOAD_PERIOD) {
     return false
   }
 
   return {
-    beeApiUrl: BEE_API_URL || DEFAULT_BEE_API_URL,
+    beeApiUrls: BEE_API_URLS ? BEE_API_URLS.split(',') : [DEFAULT_BEE_API_URL],
     refreshPeriod: Number(REUPLOAD_PERIOD),
   }
 }
