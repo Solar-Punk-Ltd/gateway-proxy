@@ -300,13 +300,16 @@ export class StampsManager {
       let refreshStamps: () => Promise<void>
 
       if (config.mode === 'autobuy') {
-
-        refreshStamps = async () =>  {
-          await Promise.all(config.beeApiUrls.map(async beeApiUrl => await this.refreshStampsAutobuy(config, new Bee(beeApiUrl))))
+        refreshStamps = async () => {
+          await Promise.all(
+            config.beeApiUrls.map(async beeApiUrl => await this.refreshStampsAutobuy(config, new Bee(beeApiUrl))),
+          )
         }
       } else {
         refreshStamps = async () => {
-          await Promise.all(config.beeApiUrls.map(async beeApiUrl => await this.refreshStampsExtends(config, new Bee(beeApiUrl))))
+          await Promise.all(
+            config.beeApiUrls.map(async beeApiUrl => await this.refreshStampsExtends(config, new Bee(beeApiUrl))),
+          )
         }
       }
       this.stop()

@@ -146,7 +146,7 @@ describe('getStampsConfig', () => {
         mode: 'extendsTTL',
         depth: Number(POSTAGE_DEPTH),
         amount: POSTAGE_AMOUNT,
-        beeApiUrls: BEE_API_URLS? [BEE_API_URLS] : [DEFAULT_BEE_API_URL],
+        beeApiUrls: BEE_API_URLS ? [BEE_API_URLS] : [DEFAULT_BEE_API_URL],
         ttlMin: Number(POSTAGE_TTL_MIN),
         refreshPeriod: Number(POSTAGE_REFRESH_PERIOD),
       },

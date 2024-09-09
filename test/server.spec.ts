@@ -8,9 +8,10 @@ import { StampsManager } from '../src/stamps'
 import { createHeaderCheckMockServer } from './header-check.mockserver'
 import { bee, getPostageBatch, makeCollectionFromFS } from './utils'
 
-const beeApiUrls =  process.env.BEE_API_URLS ? process.env.BEE_API_URLS.split(',') : ['http://localhost:1633']
-const beeApiUrl = process.env.BEE_API_URL || 'http://localhost:1633'
-const beeApiUrlWrong = process.env.BEE_API_URLS_WRONG?  process.env.BEE_API_URLS_WRONG.split(',') :  ['http://localhost:2021']
+const beeApiUrls = process.env.BEE_API_URLS ? process.env.BEE_API_URLS.split(',') : ['http://localhost:1633']
+const beeApiUrlWrong = process.env.BEE_API_URLS_WRONG
+  ? process.env.BEE_API_URLS_WRONG.split(',')
+  : ['http://localhost:2021']
 const authorization = process.env.AUTH_SECRET || 'super_secret_token'
 
 const app = createApp({ beeApiUrls })
