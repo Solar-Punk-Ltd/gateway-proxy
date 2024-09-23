@@ -13,7 +13,7 @@ describe('readiness', () => {
 
   test('should be ready with stamp management', async () => {
     const stampManager = new StampsManager()
-    await stampManager.start({ mode: 'hardcoded', stamp: process.env.BEE_POSTAGE as string })
+    await stampManager.start({ mode: 'hardcoded', stamps: [process.env.BEE_POSTAGE as string] })
     const app = createApp(
       {
         beeApiUrls: ['http://localhost:1633'],

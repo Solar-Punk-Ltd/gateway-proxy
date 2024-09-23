@@ -325,9 +325,7 @@ export class StampsManager {
   /**
    * Start the manager in either hardcoded or autobuy mode
    */
-  async start(config: StampsConfig, apiUrls: string[]): Promise<void> {
-    this.apiUrls = apiUrls
-
+  async start(config: StampsConfig): Promise<void> {
     // Hardcoded stamp mode
     if (config.mode === 'hardcoded') this.stamps = config.stamps
     // Autobuy or ExtendsTTL mode

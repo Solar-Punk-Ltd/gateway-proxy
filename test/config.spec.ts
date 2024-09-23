@@ -15,7 +15,7 @@ import {
 describe('getAppConfig', () => {
   it('should return default values', () => {
     const config = getAppConfig()
-    expect(config.beeApiUrls).toEqual(DEFAULT_BEE_API_URL)
+    expect(config.beeApiUrls).toEqual([DEFAULT_BEE_API_URL])
     expect(config.authorization).toBeUndefined()
   })
 
@@ -61,7 +61,7 @@ describe('getServerConfig', () => {
 })
 
 describe('getStampsConfig', () => {
-  const POSTAGE_STAMP = 'f1e4ff753ea1cb923269ed0cda909d13a10d624719edf261e196584e9e764e50'
+  const POSTAGE_STAMPS = 'f1e4ff753ea1cb923269ed0cda909d13a10d624719edf261e196584e9e764e50'
   const POSTAGE_AMOUNT = '414720000'
   const POSTAGE_DEPTH = '20'
   const BEE_API_URLS = 'http://localhost:1633'
@@ -75,13 +75,13 @@ describe('getStampsConfig', () => {
     { description: 'undefined for no input', env: {}, output: undefined },
     {
       description: '{mode: hardcoded, stamp} for {POSTAGE_STAMP}',
-      env: { POSTAGE_STAMP },
-      output: { mode: 'hardcoded', stamp: POSTAGE_STAMP },
+      env: { POSTAGE_STAMPS },
+      output: { mode: 'hardcoded', stamps: [POSTAGE_STAMPS] },
     },
     {
       description: '{mode: hardcoded, stamp} for when both hardcoded and autobuy values are provided',
-      env: { POSTAGE_STAMP, POSTAGE_AMOUNT, POSTAGE_DEPTH },
-      output: { mode: 'hardcoded', stamp: POSTAGE_STAMP },
+      env: { POSTAGE_STAMPS, POSTAGE_AMOUNT, POSTAGE_DEPTH },
+      output: { mode: 'hardcoded', stamps: [POSTAGE_STAMPS] },
     },
     {
       description: '{mode: autobuy, ...} with default values',

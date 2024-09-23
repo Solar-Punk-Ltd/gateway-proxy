@@ -29,7 +29,7 @@ async function main() {
     logger.info('stamps config', stampsConfig)
     const stampManager = new StampsManager()
     logger.info('starting postage stamp manager')
-    stampManager.start(stampsConfig, appConfig.beeApiUrls)
+    stampManager.start(stampsConfig)
     logger.info('starting the proxy')
     app = createApp(appConfig, stampManager)
   } else {
