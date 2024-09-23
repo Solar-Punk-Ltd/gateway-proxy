@@ -87,7 +87,7 @@ npm run start
 
 ```sh
 export BEE_API_URLS="http://localhost:1633,http://localhost:11633"
-export POSTAGE_STAMP="f1e4ff753ea1cb923269ed0cda909d13a10d624719edf261e196584e9e764e50,f1e4ff753ea1cb923269ed0cda909d13a10d624719edf261e196584e9e764e51"
+export POSTAGE_STAMPS="f1e4ff753ea1cb923269ed0cda909d13a10d624719edf261e196584e9e764e50,f1e4ff753ea1cb923269ed0cda909d13a10d624719edf261e196584e9e764e51"
 
 npm run start
 ```
