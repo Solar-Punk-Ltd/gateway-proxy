@@ -141,11 +141,44 @@ export async function topUpStamp(bee: Bee, postageBatchId: string, amount: strin
 }
 
 export class StampsManager {
-  private stamp?: string
+  private apiUrls?: string[]
+  private stamps?: string[]
   private usableStamps?: PostageBatch[]
   private interval?: ReturnType<typeof setInterval>
   private isBuyingStamp?: boolean = false
   private extendingStamps: string[] = []
+
+  /**
+   * Matches a given API URL to its corresponding postage stamp.
+   *
+   * @param apiUrl - The API URL to match.
+   * @returns The corresponding postage stamp if a match is found, otherwise 'NO_STAMP'.
+   * @throws Will throw an error if API URLs or stamps are not defined, or if their lengths do not match.
+   */
+  public matchPostageStampToUrl(apiUrl: string): string {
+    if (!this.apiUrls) {
+      throw new Error('API URLs are not defined')
+    }
+
+    if (!this.stamps) {
+      throw new Error('Stamps are not defined')
+    }
+
+    if (this.apiUrls.length !== this.stamps.length) {
+      throw new Error('API URLs and Stamps have different lengths')
+    }
+
+    for (const url of this.apiUrls) {
+      if (url === apiUrl) {
+        const stamp = this.stamps[this.apiUrls.indexOf(url)]
+        logger.info('matched postage stamp to url', { stamp, url })
+
+        return stamp
+      }
+    }
+
+    return 'NO_STAMP'
+  }
 
   /**
    * Get postage stamp that should be replaced in a the proxy request header
@@ -154,21 +187,21 @@ export class StampsManager {
    *
    * @throws Error if there is no postage stamp
    */
-  get postageStamp(): string {
+  get postageStamps(): string[] {
     stampGetCounter.inc()
 
-    if (this.stamp) {
-      const stamp = this.stamp
-      logger.info('using hardcoded stamp', { stamp })
+    if (this.stamps) {
+      const stamps = this.stamps
+      logger.info('using hardcoded stamps', { stamps })
 
-      return stamp
+      return stamps
     }
 
-    if (this.usableStamps && this.usableStamps[0]) {
-      const stamp = this.usableStamps[0]
-      logger.info('using autobought stamp', { stamp })
+    if (this.usableStamps) {
+      const stamps = this.usableStamps
+      logger.info('using autobought stamps', { stamps })
 
-      return stamp.batchID
+      return stamps.map(stamp => stamp.batchID)
     }
 
     stampGetErrorCounter.inc()
@@ -294,7 +327,7 @@ export class StampsManager {
    */
   async start(config: StampsConfig): Promise<void> {
     // Hardcoded stamp mode
-    if (config.mode === 'hardcoded') this.stamp = config.stamp
+    if (config.mode === 'hardcoded') this.stamps = config.stamps
     // Autobuy or ExtendsTTL mode
     else {
       let refreshStamps: () => Promise<void>

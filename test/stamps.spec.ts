@@ -60,8 +60,8 @@ describe('postageStamp', () => {
   it('should return correct hardcoded single postage stamp', async () => {
     const stamp = '0000000000000000000000000000000000000000000000000000000000000000'
     const stampManager = new StampsManager()
-    await stampManager.start(getStampsConfig({ POSTAGE_STAMP: stamp })!)
-    expect(stampManager.postageStamp).toEqual(stamp)
+    await stampManager.start(getStampsConfig({ POSTAGE_STAMPS: stamp })!)
+    expect(stampManager.postageStamps).toEqual(stamp)
   })
 
   it('should return existing stamp', async () => {
@@ -79,7 +79,7 @@ describe('postageStamp', () => {
     await System.sleepMillis(1_000)
     expect(db.toArray().length).toEqual(1)
 
-    const batchId = manager.postageStamp
+    const batchId = manager.postageStamps
     expect(batchId).toBe(stamp.batchID)
     manager.stop()
     await System.sleepMillis(250) // Needed as there could be the wait for posage stamp usable process in progress
@@ -98,7 +98,7 @@ describe('postageStamp', () => {
     await System.sleepMillis(1_000)
     expect(db.toArray().length).toEqual(1)
 
-    expect(manager.postageStamp).toEqual(db.toArray()[0].batchID)
+    expect(manager.postageStamps).toEqual([db.toArray()[0].batchID])
     manager.stop()
     await System.sleepMillis(250) // Needed as there could be the wait for posage stamp usable process in progress
   })
@@ -120,7 +120,7 @@ describe('postageStamp', () => {
     await System.sleepMillis(1_000)
 
     expect(db.toArray().length).toEqual(2)
-    expect(manager.postageStamp).toEqual(stamp.batchID)
+    expect(manager.postageStamps).toEqual([stamp.batchID])
     manager.stop()
     await System.sleepMillis(250) // Needed as there could be the wait for posage stamp usable process in progress
   })
@@ -142,13 +142,13 @@ describe('postageStamp', () => {
 
     await System.sleepMillis(200)
     expect(db.toArray().length).toEqual(1)
-    expect(manager.postageStamp).toEqual(stamp.batchID)
+    expect(manager.postageStamps).toEqual([stamp.batchID])
 
     stamp.utilization = 15
     await System.sleepMillis(500)
 
     expect(db.toArray().length).toEqual(2)
-    expect(manager.postageStamp).not.toEqual(stamp.batchID)
+    expect(manager.postageStamps).not.toEqual([stamp.batchID])
     manager.stop()
     await System.sleepMillis(1500) // Needed as there could be the wait for posage stamp usable process in progress
   })
