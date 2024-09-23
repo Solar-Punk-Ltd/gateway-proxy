@@ -37,7 +37,8 @@ export async function checkReadiness(
 async function tryUploadingSingleChunk(bee: Bee, stampsManager: StampsManager): Promise<ReadinessStatus> {
   const chunk = makeChunk()
   try {
-    const postageStamp = stampsManager.postageStamp
+    const postageStamp = stampsManager.matchPostageStampToUrl(bee.url)
+
     await bee.uploadChunk(postageStamp, chunk, { deferred: true }, { timeout: READINESS_TIMEOUT_MS })
 
     return ReadinessStatus.OK

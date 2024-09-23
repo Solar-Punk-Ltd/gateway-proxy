@@ -18,7 +18,7 @@ export interface ServerConfig {
 
 interface StampsConfigHardcoded {
   mode: 'hardcoded'
-  stamp: string
+  stamps: string[]
 }
 export interface StampsConfigExtends {
   mode: 'extendsTTL'
@@ -76,7 +76,7 @@ export type EnvironmentVariables = Partial<{
   REMOVE_PIN_HEADER: string
 
   // Stamps
-  POSTAGE_STAMP: string
+  POSTAGE_STAMPS: string
   POSTAGE_DEPTH: string
   POSTAGE_AMOUNT: string
   POSTAGE_USAGE_THRESHOLD: string
@@ -141,7 +141,7 @@ export function getServerConfig({ PORT, HOSTNAME }: EnvironmentVariables = {}): 
 
 export function getStampsConfig({
   BEE_API_URLS,
-  POSTAGE_STAMP,
+  POSTAGE_STAMPS,
   POSTAGE_DEPTH,
   POSTAGE_AMOUNT,
   POSTAGE_USAGE_THRESHOLD,
@@ -154,7 +154,7 @@ export function getStampsConfig({
   const beeApiUrls = BEE_API_URLS ? BEE_API_URLS.split(',') : [DEFAULT_BEE_API_URL]
 
   // Start in hardcoded mode
-  if (POSTAGE_STAMP) return { mode: 'hardcoded', stamp: POSTAGE_STAMP }
+  if (POSTAGE_STAMPS) return { mode: 'hardcoded', stamps: POSTAGE_STAMPS.split(',') }
   // Start autobuy
   else if (!POSTAGE_EXTENDSTTL && POSTAGE_DEPTH && POSTAGE_AMOUNT) {
     return {

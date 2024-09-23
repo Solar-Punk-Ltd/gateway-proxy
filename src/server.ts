@@ -27,6 +27,8 @@ export const createApp = (
   stampManager?: StampsManager,
 ): Application => {
   logger.info(' bee_api_urls ', { beeApiUrls })
+  const stamps = stampManager?.postageStamps ?? []
+  logger.info(' stamps ', { stamps })
   const bee = new Bee(beeApiUrls[0])
 
   // Create Express Server

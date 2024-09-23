@@ -82,7 +82,8 @@ async function fetchAndRespond(
   res: Response,
   options: Options,
 ) {
-  const beeApiUrl = nextBeeUrl(options)
+  const [beeApiUrlLB, postageStampLB] = nextBeeUrlAndPostageStamp(options)
+  logger.info('proxying to', { beeApiUrlLB, postageStampLB })
 
   if (options.removePinHeader) {
     delete headers[SWARM_PIN_HEADER]
@@ -90,11 +91,11 @@ async function fetchAndRespond(
 
   try {
     if (method === 'POST' && options.stampManager) {
-      headers[SWARM_STAMP_HEADER] = options.stampManager.postageStamp
+      headers[SWARM_STAMP_HEADER] = postageStampLB
     }
     let response = await axios({
       method,
-      url: Strings.joinUrl(beeApiUrl, path) + Objects.toQueryString(query, true),
+      url: Strings.joinUrl(beeApiUrlLB, path) + Objects.toQueryString(query, true),
       data: body,
       headers,
       timeout: Dates.minutes(20),
@@ -104,7 +105,7 @@ async function fetchAndRespond(
     })
 
     if (response.status === 404 || (response.status >= 300 && response.status < 400)) {
-      const url = Strings.joinUrl(beeApiUrl, path) + '.html' + Objects.toQueryString(query, true)
+      const url = Strings.joinUrl(beeApiUrlLB, path) + '.html' + Objects.toQueryString(query, true)
       const probeResponse = await axios({
         method,
         url,
@@ -171,8 +172,11 @@ async function fetchAndRespond(
   }
 }
 
-function nextBeeUrl(options: Options) {
+function nextBeeUrlAndPostageStamp(options: Options): [string, string] {
   beeApiUrlIx = (beeApiUrlIx + 1) % options.beeApiUrls.length
+  const beeApiUrl = options.beeApiUrls[beeApiUrlIx]
+  const postageStamp = options.stampManager?.postageStamps[beeApiUrlIx] ?? 'NO_STAMP'
+  logger.info('proxying to', { beeApiUrl, postageStamp })
 
-  return options.beeApiUrls[beeApiUrlIx]
+  return [beeApiUrl, postageStamp]
 }
