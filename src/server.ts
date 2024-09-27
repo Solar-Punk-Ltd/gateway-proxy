@@ -10,6 +10,7 @@ import { register } from './metrics'
 import { createProxyEndpoints } from './proxy'
 import { ReadinessStatus, checkReadiness } from './readiness'
 import type { StampsManager } from './stamps'
+import cors from 'cors'
 
 export const createApp = (
   {
@@ -33,6 +34,8 @@ export const createApp = (
 
   // Create Express Server
   const app = express()
+
+  app.use(cors())
 
   app.use(
     bodyParser.raw({
