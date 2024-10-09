@@ -47,7 +47,7 @@ export const createApp = (
     res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     res.set(
       'Access-Control-Allow-Headers',
-      'Content-Type, Authorization, swarm-postage-batch-id, swarm-deferred-upload',
+      'Swarm-Redundancy-Level, Content-Type, Authorization, swarm-postage-batch-id, swarm-deferred-upload',
     )
 
     if (req.method === 'OPTIONS') {

@@ -12,6 +12,7 @@ export const POST_PROXY_ENDPOINTS = ['/chunks', '/bytes', '/bzz', '/soc/*', '/fe
 
 const BAD_PATH = `bzz/${'00'.repeat(32)}`
 const SWARM_STAMP_HEADER = 'swarm-postage-batch-id'
+const SWARM_REDUNDANCY_LEVEL = 'Swarm-Redundancy-Level'
 const SWARM_PIN_HEADER = 'swarm-pin'
 
 let beeApiUrlIx = 0
@@ -90,6 +91,8 @@ async function fetchAndRespond(
   }
 
   try {
+    headers[SWARM_REDUNDANCY_LEVEL] = '0'
+
     if (method === 'POST' && options.stampManager) {
       headers[SWARM_STAMP_HEADER] = postageStampLB
     }
