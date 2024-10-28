@@ -1,3 +1,6 @@
+import { readFileSync } from 'fs'
+import { join } from 'path'
+
 export interface AppConfig {
   beeApiUrls: string[]
   authorization?: string
@@ -9,6 +12,10 @@ export interface AppConfig {
   exposeHashedIdentity?: boolean
   readinessCheck?: boolean
   homepage?: string
+  filteringActive: boolean
+  filteringKey: string
+  filteringUrl: string
+  filteringPrompt: string
 }
 
 export interface ServerConfig {
@@ -43,6 +50,13 @@ export interface StampsConfigAutobuy {
   usageMax: number
   ttlMin: number
   refreshPeriod: number
+}
+
+export interface FilteringConfig {
+  active: boolean
+  key: string
+  url: string
+  prompt: string
 }
 
 export type StampsConfig = StampsConfigHardcoded | StampsConfigAutobuy | StampsConfigExtends
@@ -88,6 +102,9 @@ export type EnvironmentVariables = Partial<{
 
   // Homepage
   HOMEPAGE: string
+
+  // Filtering config file
+  FILTERING_CONFIG_FILE: string
 }>
 
 export const SUPPORTED_LEVELS = ['critical', 'error', 'warn', 'info', 'verbose', 'debug'] as const
@@ -120,7 +137,10 @@ export function getAppConfig({
   EXPOSE_HASHED_IDENTITY,
   READINESS_CHECK,
   HOMEPAGE,
+  FILTERING_CONFIG_FILE,
 }: EnvironmentVariables = {}): AppConfig {
+  const filteringConfig = getFilteringConfig({ FILTERING_CONFIG_FILE })
+
   return {
     hostname: HOSTNAME || DEFAULT_HOSTNAME,
     beeApiUrls: BEE_API_URLS ? BEE_API_URLS.split(',') : [DEFAULT_BEE_API_URL],
@@ -132,6 +152,10 @@ export function getAppConfig({
     exposeHashedIdentity: EXPOSE_HASHED_IDENTITY === 'true',
     readinessCheck: READINESS_CHECK === 'true',
     homepage: HOMEPAGE,
+    filteringActive: filteringConfig.active,
+    filteringKey: filteringConfig.key,
+    filteringUrl: filteringConfig.url,
+    filteringPrompt: filteringConfig.prompt,
   }
 }
 
@@ -203,5 +227,31 @@ export function getContentConfig({ BEE_API_URLS, REUPLOAD_PERIOD }: EnvironmentV
   return {
     beeApiUrls: BEE_API_URLS ? BEE_API_URLS.split(',') : [DEFAULT_BEE_API_URL],
     refreshPeriod: Number(REUPLOAD_PERIOD),
+  }
+}
+
+export function getFilteringConfig({ FILTERING_CONFIG_FILE }: EnvironmentVariables = {}): FilteringConfig {
+  const NO_FILTERING: FilteringConfig = { active: false, key: '', url: '', prompt: '' }
+
+  if (!FILTERING_CONFIG_FILE) {
+    //console.warn('FILTERING_CONFIG_FILE is not defined, filtering is disabled')
+
+    return NO_FILTERING
+  }
+
+  try {
+    const result = readFileSync(join(__dirname, FILTERING_CONFIG_FILE), 'utf-8')
+    const filteringConfig: FilteringConfig = JSON.parse(result)
+
+    return { ...filteringConfig, active: true }
+  } catch (error) {
+    /*
+    console.error(
+      `Error reading filtering config file: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }, filtering is disabled`,
+    )
+    */
+    return NO_FILTERING
   }
 }

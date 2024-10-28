@@ -6,6 +6,7 @@ import { subdomainToBzz } from './bzz-link'
 import { logger } from './logger'
 import { StampsManager } from './stamps'
 import { getErrorMessage } from './utils'
+import { UserMessage, Message, callAI } from './filtering'
 
 export const GET_PROXY_ENDPOINTS = ['/chunks/*', '/bytes/*', '/bzz/*', '/feeds/*']
 export const POST_PROXY_ENDPOINTS = ['/chunks', '/bytes', '/bzz', '/soc/*', '/feeds/*']
@@ -27,6 +28,10 @@ interface Options {
   ensSubdomains?: boolean
   remap: Record<string, string>
   userAgents?: string[]
+  filteringActive: boolean
+  filteringKey: string
+  filteringUrl: string
+  filteringPrompt: string
 }
 
 export function createProxyEndpoints(app: Application, options: Options) {
@@ -70,6 +75,28 @@ export function createProxyEndpoints(app: Application, options: Options) {
     await fetchAndRespond('GET', req.path, req.query, req.headers, req.body, res, options)
   })
   app.post(POST_PROXY_ENDPOINTS, async (req, res) => {
+    if (options.filteringActive && req.path.startsWith('/bytes') && req.method === 'POST') {
+      const bodyBuffer = Buffer.from(req.body)
+      const userMessage = JSON.parse(bodyBuffer.toString('utf8')) as UserMessage
+
+      if (typeof userMessage.message === 'string') {
+        userMessage.message = JSON.parse(userMessage.message) as Message
+      }
+      const aiResponse = await callAI(
+        options.filteringPrompt,
+        userMessage.message.text,
+        options.filteringUrl,
+        options.filteringKey,
+      )
+      //console.log(aiResponse)
+      userMessage.message.flagged = aiResponse.flagged
+      //userMessage.message.reason = aiResponse.reason
+      //console.log(userMessage)
+
+      req.body = Buffer.from(JSON.stringify(userMessage))
+      const bodySize = Buffer.byteLength(req.body)
+      req.headers['content-length'] = bodySize.toString()
+    }
     await fetchAndRespond('POST', req.path, req.query, req.headers, req.body, res, options)
   })
 }
@@ -96,6 +123,7 @@ async function fetchAndRespond(
     if (method === 'POST' && options.stampManager) {
       headers[SWARM_STAMP_HEADER] = postageStampLB
     }
+
     let response = await axios({
       method,
       url: Strings.joinUrl(beeApiUrlLB, path) + Objects.toQueryString(query, true),
@@ -163,8 +191,8 @@ async function fetchAndRespond(
     delete response.headers['content-length']
     delete response.headers['content-encoding']
     delete response.headers['transfer-encoding']
-    delete response.headers['connection']
-    delete response.headers['etag']
+    delete response.headers.connection
+    delete response.headers.etag
     delete response.headers['last-modified']
     delete response.headers['cache-control']
 

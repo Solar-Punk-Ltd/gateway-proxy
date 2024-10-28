@@ -23,6 +23,10 @@ export const createApp = (
     exposeHashedIdentity,
     readinessCheck,
     homepage,
+    filteringActive,
+    filteringKey,
+    filteringUrl,
+    filteringPrompt,
   }: AppConfig,
   stampManager?: StampsManager,
 ): Application => {
@@ -146,6 +150,10 @@ export const createApp = (
     userAgents: (Arrays.getArgument(process.argv, 'allow-user-agents', process.env, 'ALLOW_USER_AGENTS') || '').split(
       ',',
     ),
+    filteringActive,
+    filteringKey,
+    filteringUrl,
+    filteringPrompt,
   })
 
   if (homepage) {
