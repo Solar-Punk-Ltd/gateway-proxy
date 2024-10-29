@@ -52,7 +52,7 @@ export async function callAI(prompt: string, userInput: string, url: string, tok
     .finally(() => clearTimeout(timeoutId))
 
   if (response.status === 408) {
-    return { flagged: true, reason: 'Request timed out' }
+    return { flagged: false, reason: 'Request timed out' }
   }
   let retV: AIResponse = { flagged: false, reason: '' }
   try {
@@ -62,7 +62,7 @@ export async function callAI(prompt: string, userInput: string, url: string, tok
   } catch (error) {
     //console.log(error)
 
-    return { flagged: true, reason: 'Error parsing response' }
+    return { flagged: false, reason: 'Error parsing response' }
   }
 
   return retV
