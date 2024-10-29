@@ -108,24 +108,15 @@ export type EnvironmentVariables = Partial<{
   FILTERING_CONFIG_FILE: string
 }>
 
-export const SUPPORTED_LEVELS = ['critical', 'error', 'warn', 'info', 'verbose', 'debug'] as const
-export type SupportedLevels = typeof SUPPORTED_LEVELS[number]
-
 export const DEFAULT_BEE_API_URL = 'http://localhost:1633'
 export const DEFAULT_HOSTNAME = 'localhost'
 export const DEFAULT_PORT = 3000
 export const DEFAULT_POSTAGE_USAGE_THRESHOLD = 0.7
 export const DEFAULT_POSTAGE_USAGE_MAX = 0.9
 export const DEFAULT_POSTAGE_REFRESH_PERIOD = 60_000
-export const DEFAULT_LOG_LEVEL = 'info'
 export const MINIMAL_EXTENDS_TTL_VALUE = 60
 export const READINESS_TIMEOUT_MS = 3000
 export const ERROR_NO_STAMP = 'No postage stamp'
-
-export const logLevel =
-  process.env.LOG_LEVEL && SUPPORTED_LEVELS.includes(process.env.LOG_LEVEL as SupportedLevels)
-    ? process.env.LOG_LEVEL
-    : DEFAULT_LOG_LEVEL
 
 export function getAppConfig({
   BEE_API_URLS,
@@ -235,7 +226,7 @@ export function getFilteringConfig({ FILTERING_CONFIG_FILE }: EnvironmentVariabl
   const NO_FILTERING: FilteringConfig = { active: false, key: '', url: '', prompt: '' }
 
   if (!FILTERING_CONFIG_FILE) {
-    logger.warning('FILTERING_CONFIG_FILE is not defined, filtering is disabled')
+    logger.warn('FILTERING_CONFIG_FILE is not defined, filtering is disabled')
 
     return NO_FILTERING
   }
@@ -247,6 +238,7 @@ export function getFilteringConfig({ FILTERING_CONFIG_FILE }: EnvironmentVariabl
     return { ...filteringConfig, active: true }
   } catch (error) {
     logger.error(`Error reading filtering config file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+
     return NO_FILTERING
   }
 }

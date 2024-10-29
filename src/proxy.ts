@@ -6,7 +6,7 @@ import { subdomainToBzz } from './bzz-link'
 import { logger } from './logger'
 import { StampsManager } from './stamps'
 import { getErrorMessage } from './utils'
-import { UserMessage, Message, callAI } from './filtering'
+import { doFiltering } from './filtering'
 
 export const GET_PROXY_ENDPOINTS = ['/chunks/*', '/bytes/*', '/bzz/*', '/feeds/*']
 export const POST_PROXY_ENDPOINTS = ['/chunks', '/bytes', '/bzz', '/soc/*', '/feeds/*']
@@ -76,26 +76,20 @@ export function createProxyEndpoints(app: Application, options: Options) {
   })
   app.post(POST_PROXY_ENDPOINTS, async (req, res) => {
     if (options.filteringActive && req.path.startsWith('/bytes') && req.method === 'POST') {
-      const bodyBuffer = Buffer.from(req.body)
-      const userMessage = JSON.parse(bodyBuffer.toString('utf8')) as UserMessage
-
-      if (typeof userMessage.message === 'string') {
-        userMessage.message = JSON.parse(userMessage.message) as Message
+      const originalBody = req.body
+      try {
+        req.body = await doFiltering(
+          Buffer.from(req.body),
+          options.filteringPrompt,
+          options.filteringUrl,
+          options.filteringKey,
+        )
+        const bodySize = Buffer.byteLength(req.body)
+        req.headers['content-length'] = bodySize.toString()
+      } catch (error) {
+        req.body = originalBody
+        logger.error(`proxy failed: ${getErrorMessage(error)}`)
       }
-      const aiResponse = await callAI(
-        options.filteringPrompt,
-        userMessage.message.text,
-        options.filteringUrl,
-        options.filteringKey,
-      )
-      //console.log(aiResponse)
-      userMessage.message.flagged = aiResponse.flagged
-      //userMessage.message.reason = aiResponse.reason
-      //console.log(userMessage)
-
-      req.body = Buffer.from(JSON.stringify(userMessage))
-      const bodySize = Buffer.byteLength(req.body)
-      req.headers['content-length'] = bodySize.toString()
     }
     await fetchAndRespond('POST', req.path, req.query, req.headers, req.body, res, options)
   })

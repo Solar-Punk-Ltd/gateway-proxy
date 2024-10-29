@@ -3,7 +3,14 @@ import requestStats from 'request-stats'
 import { Logform, Logger, createLogger, format, transports } from 'winston'
 
 import { Strings } from 'cafe-utility'
-import { SUPPORTED_LEVELS, SupportedLevels, logLevel } from './config'
+
+export const DEFAULT_LOG_LEVEL = 'info'
+export const SUPPORTED_LEVELS = ['critical', 'error', 'warn', 'info', 'verbose', 'debug'] as const
+export type SupportedLevels = typeof SUPPORTED_LEVELS[number]
+export const logLevel =
+  process.env.LOG_LEVEL && SUPPORTED_LEVELS.includes(process.env.LOG_LEVEL as SupportedLevels)
+    ? process.env.LOG_LEVEL
+    : DEFAULT_LOG_LEVEL
 
 const supportedLevels: Record<SupportedLevels, number> = SUPPORTED_LEVELS.reduce(
   (acc, cur, idx) => ({ ...acc, [cur]: idx }),

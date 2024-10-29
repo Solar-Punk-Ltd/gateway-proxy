@@ -1,4 +1,4 @@
-import { logger } from "./logger"
+import { logger } from './logger'
 
 export type AIResponse = {
   flagged: boolean
@@ -68,4 +68,19 @@ export async function callAI(prompt: string, userInput: string, url: string, tok
   }
 
   return retV
+}
+
+export async function doFiltering(body: Buffer, prompt: string, APIUrl: string, key: string): Promise<Buffer> {
+  const bodyBuffer = Buffer.from(body)
+  const userMessage = JSON.parse(bodyBuffer.toString('utf8')) as UserMessage
+
+  if (typeof userMessage.message === 'string') {
+    userMessage.message = JSON.parse(userMessage.message) as Message
+  }
+  const aiResponse = await callAI(prompt, userMessage.message.text, APIUrl, key)
+  userMessage.message.flagged = aiResponse.flagged
+  //userMessage.message.reason = aiResponse.reason
+  logger.debug('userMessage', userMessage)
+
+  return Buffer.from(JSON.stringify(userMessage))
 }
