@@ -1,3 +1,5 @@
+import { logger } from "./logger"
+
 export type AIResponse = {
   flagged: boolean
   reason: string
@@ -45,7 +47,7 @@ export async function callAI(prompt: string, userInput: string, url: string, tok
     signal: controller.signal,
   })
     .catch((error: any) => {
-      //console.log(error)
+      logger.error('Error calling AI', error)
 
       return new Response(null, { status: 408, statusText: 'Request Timeout' })
     })
@@ -60,7 +62,7 @@ export async function callAI(prompt: string, userInput: string, url: string, tok
     const cleanedResponse = data.result.response.replace(/```/g, '')
     retV = JSON.parse(cleanedResponse)
   } catch (error) {
-    //console.log(error)
+    logger.error('Error parsing response', error)
 
     return { flagged: false, reason: 'Error parsing response' }
   }
