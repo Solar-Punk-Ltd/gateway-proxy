@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
+import { logger } from './logger'
 
 export interface AppConfig {
   beeApiUrls: string[]
@@ -234,7 +235,7 @@ export function getFilteringConfig({ FILTERING_CONFIG_FILE }: EnvironmentVariabl
   const NO_FILTERING: FilteringConfig = { active: false, key: '', url: '', prompt: '' }
 
   if (!FILTERING_CONFIG_FILE) {
-    //console.warn('FILTERING_CONFIG_FILE is not defined, filtering is disabled')
+    logger.warning('FILTERING_CONFIG_FILE is not defined, filtering is disabled')
 
     return NO_FILTERING
   }
