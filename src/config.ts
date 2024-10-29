@@ -246,13 +246,7 @@ export function getFilteringConfig({ FILTERING_CONFIG_FILE }: EnvironmentVariabl
 
     return { ...filteringConfig, active: true }
   } catch (error) {
-    /*
-    console.error(
-      `Error reading filtering config file: ${
-        error instanceof Error ? error.message : 'Unknown error'
-      }, filtering is disabled`,
-    )
-    */
+    logger.error(`Error reading filtering config file: ${error instanceof Error ? error.message : 'Unknown error'}`)
     return NO_FILTERING
   }
 }
