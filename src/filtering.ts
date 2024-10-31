@@ -7,7 +7,7 @@ export type AIResponse = {
 
 export interface Message {
   text: string
-  messageId: string
+  messageId?: string
   threadId?: string
   parent?: string
   flagged?: boolean
