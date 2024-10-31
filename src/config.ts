@@ -1,5 +1,3 @@
-import { readFileSync } from 'fs'
-import { join } from 'path'
 import { logger } from './logger'
 
 export interface AppConfig {
@@ -235,8 +233,7 @@ export function getFilteringConfig({ FILTERING_CONFIG_FILE }: EnvironmentVariabl
   }
 
   try {
-    const result = readFileSync(join(__dirname, FILTERING_CONFIG_FILE), 'utf-8')
-    const filteringConfig: FilteringConfig = JSON.parse(result)
+    const filteringConfig: FilteringConfig = JSON.parse(FILTERING_CONFIG_FILE)
 
     return { ...filteringConfig, active: true }
   } catch (error) {

@@ -92,11 +92,17 @@ export async function doFiltering(
   if (typeof userMessage.message === 'string') {
     userMessage.message = JSON.parse(userMessage.message) as Message
   }
-  const aiResponse = await callAI(prompt, userMessage.message.text, APIUrl, key, timeout)
-  userMessage.message.flagged = aiResponse.flagged
+  let aiResponse: AIResponse = { flagged: false, reason: '' }
 
-  if (aiResponse.reason.length > 0) {
-    logger.warning(aiResponse.reason)
+  if (userMessage.message.text.trim().length > 0) {
+    aiResponse = await callAI(prompt, userMessage.message.text, APIUrl, key, timeout)
+    userMessage.message.flagged = aiResponse.flagged
+  } else {
+    userMessage.message.flagged = false
+  }
+
+  if (aiResponse.flagged) {
+    logger.info(`flagged: ${userMessage.message.text} -  ${aiResponse.reason}`)
   }
 
   return Buffer.from(JSON.stringify(userMessage))
