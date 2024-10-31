@@ -7,9 +7,9 @@ export type AIResponse = {
 
 export interface Message {
   text: string
-  threadId: string
   messageId: string
-  parent: string | null
+  threadId?: string
+  parent?: string
   flagged?: boolean
   reason?: string
 }
@@ -18,8 +18,9 @@ export interface UserMessage {
   message: Message
   timestamp: number
   username: string
-  address: string
+  address?: string
 }
+
 export async function callAI(
   prompt: string,
   userInput: string,
@@ -93,8 +94,10 @@ export async function doFiltering(
   }
   const aiResponse = await callAI(prompt, userMessage.message.text, APIUrl, key, timeout)
   userMessage.message.flagged = aiResponse.flagged
-  //userMessage.message.reason = aiResponse.reason
-  //logger.info(JSON.stringify(userMessage))
+
+  if (aiResponse.reason.length > 0) {
+    logger.warning(aiResponse.reason)
+  }
 
   return Buffer.from(JSON.stringify(userMessage))
 }
