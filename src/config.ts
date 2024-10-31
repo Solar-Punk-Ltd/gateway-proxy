@@ -1,3 +1,7 @@
+import { readFileSync } from 'fs'
+import { join } from 'path'
+import { logger } from './logger'
+
 export interface AppConfig {
   beeApiUrls: string[]
   authorization?: string
@@ -9,6 +13,11 @@ export interface AppConfig {
   exposeHashedIdentity?: boolean
   readinessCheck?: boolean
   homepage?: string
+  filteringActive: boolean
+  filteringKey: string
+  filteringUrl: string
+  filteringPrompt: string
+  filteringTimeout: number
 }
 
 export interface ServerConfig {
@@ -43,6 +52,14 @@ export interface StampsConfigAutobuy {
   usageMax: number
   ttlMin: number
   refreshPeriod: number
+}
+
+export interface FilteringConfig {
+  active: boolean
+  key: string
+  url: string
+  prompt: string
+  timeout: number
 }
 
 export type StampsConfig = StampsConfigHardcoded | StampsConfigAutobuy | StampsConfigExtends
@@ -88,10 +105,10 @@ export type EnvironmentVariables = Partial<{
 
   // Homepage
   HOMEPAGE: string
-}>
 
-export const SUPPORTED_LEVELS = ['critical', 'error', 'warn', 'info', 'verbose', 'debug'] as const
-export type SupportedLevels = typeof SUPPORTED_LEVELS[number]
+  // Filtering config file
+  FILTERING_CONFIG_FILE: string
+}>
 
 export const DEFAULT_BEE_API_URL = 'http://localhost:1633'
 export const DEFAULT_HOSTNAME = 'localhost'
@@ -99,15 +116,9 @@ export const DEFAULT_PORT = 3000
 export const DEFAULT_POSTAGE_USAGE_THRESHOLD = 0.7
 export const DEFAULT_POSTAGE_USAGE_MAX = 0.9
 export const DEFAULT_POSTAGE_REFRESH_PERIOD = 60_000
-export const DEFAULT_LOG_LEVEL = 'info'
 export const MINIMAL_EXTENDS_TTL_VALUE = 60
 export const READINESS_TIMEOUT_MS = 3000
 export const ERROR_NO_STAMP = 'No postage stamp'
-
-export const logLevel =
-  process.env.LOG_LEVEL && SUPPORTED_LEVELS.includes(process.env.LOG_LEVEL as SupportedLevels)
-    ? process.env.LOG_LEVEL
-    : DEFAULT_LOG_LEVEL
 
 export function getAppConfig({
   BEE_API_URLS,
@@ -120,7 +131,10 @@ export function getAppConfig({
   EXPOSE_HASHED_IDENTITY,
   READINESS_CHECK,
   HOMEPAGE,
+  FILTERING_CONFIG_FILE,
 }: EnvironmentVariables = {}): AppConfig {
+  const filteringConfig = getFilteringConfig({ FILTERING_CONFIG_FILE })
+
   return {
     hostname: HOSTNAME || DEFAULT_HOSTNAME,
     beeApiUrls: BEE_API_URLS ? BEE_API_URLS.split(',') : [DEFAULT_BEE_API_URL],
@@ -132,6 +146,11 @@ export function getAppConfig({
     exposeHashedIdentity: EXPOSE_HASHED_IDENTITY === 'true',
     readinessCheck: READINESS_CHECK === 'true',
     homepage: HOMEPAGE,
+    filteringActive: filteringConfig.active,
+    filteringKey: filteringConfig.key,
+    filteringUrl: filteringConfig.url,
+    filteringPrompt: filteringConfig.prompt,
+    filteringTimeout: filteringConfig.timeout || 3000,
   }
 }
 
@@ -203,5 +222,26 @@ export function getContentConfig({ BEE_API_URLS, REUPLOAD_PERIOD }: EnvironmentV
   return {
     beeApiUrls: BEE_API_URLS ? BEE_API_URLS.split(',') : [DEFAULT_BEE_API_URL],
     refreshPeriod: Number(REUPLOAD_PERIOD),
+  }
+}
+
+export function getFilteringConfig({ FILTERING_CONFIG_FILE }: EnvironmentVariables = {}): FilteringConfig {
+  const NO_FILTERING: FilteringConfig = { active: false, key: '', url: '', prompt: '', timeout: 3000 }
+
+  if (!FILTERING_CONFIG_FILE) {
+    logger.warn('FILTERING_CONFIG_FILE is not defined, filtering is disabled')
+
+    return NO_FILTERING
+  }
+
+  try {
+    const result = readFileSync(join(__dirname, FILTERING_CONFIG_FILE), 'utf-8')
+    const filteringConfig: FilteringConfig = JSON.parse(result)
+
+    return { ...filteringConfig, active: true }
+  } catch (error) {
+    logger.error(`Error reading filtering config file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+
+    return NO_FILTERING
   }
 }

@@ -13,8 +13,9 @@ async function main() {
   const appConfig = getAppConfig(process.env as EnvironmentVariables)
   const { hostname, port } = getServerConfig(process.env as EnvironmentVariables)
 
-  logger.debug('proxy config', appConfig)
-  logger.debug('server config', { hostname: hostname, port })
+  const { filteringKey, ...appConfigWithoutKey } = appConfig
+  logger.info('proxy config', appConfigWithoutKey)
+  logger.info('server config', { hostname: hostname, port })
 
   let app: Application
 

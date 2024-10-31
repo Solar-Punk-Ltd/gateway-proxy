@@ -6,6 +6,7 @@ import { subdomainToBzz } from './bzz-link'
 import { logger } from './logger'
 import { StampsManager } from './stamps'
 import { getErrorMessage } from './utils'
+import { doFiltering } from './filtering'
 
 export const GET_PROXY_ENDPOINTS = ['/chunks/*', '/bytes/*', '/bzz/*', '/feeds/*']
 export const POST_PROXY_ENDPOINTS = ['/chunks', '/bytes', '/bzz', '/soc/*', '/feeds/*']
@@ -27,6 +28,11 @@ interface Options {
   ensSubdomains?: boolean
   remap: Record<string, string>
   userAgents?: string[]
+  filteringActive: boolean
+  filteringKey: string
+  filteringUrl: string
+  filteringPrompt: string
+  filteringTimeout: number
 }
 
 export function createProxyEndpoints(app: Application, options: Options) {
@@ -70,6 +76,23 @@ export function createProxyEndpoints(app: Application, options: Options) {
     await fetchAndRespond('GET', req.path, req.query, req.headers, req.body, res, options)
   })
   app.post(POST_PROXY_ENDPOINTS, async (req, res) => {
+    if (options.filteringActive && req.path.startsWith('/bytes') && req.method === 'POST') {
+      const originalBody = req.body
+      try {
+        req.body = await doFiltering(
+          Buffer.from(req.body),
+          options.filteringPrompt,
+          options.filteringUrl,
+          options.filteringKey,
+          options.filteringTimeout,
+        )
+        const bodySize = Buffer.byteLength(req.body)
+        req.headers['content-length'] = bodySize.toString()
+      } catch (error) {
+        req.body = originalBody
+        logger.error(`proxy failed: ${getErrorMessage(error)}`)
+      }
+    }
     await fetchAndRespond('POST', req.path, req.query, req.headers, req.body, res, options)
   })
 }
@@ -96,6 +119,7 @@ async function fetchAndRespond(
     if (method === 'POST' && options.stampManager) {
       headers[SWARM_STAMP_HEADER] = postageStampLB
     }
+
     let response = await axios({
       method,
       url: Strings.joinUrl(beeApiUrlLB, path) + Objects.toQueryString(query, true),
@@ -163,8 +187,8 @@ async function fetchAndRespond(
     delete response.headers['content-length']
     delete response.headers['content-encoding']
     delete response.headers['transfer-encoding']
-    delete response.headers['connection']
-    delete response.headers['etag']
+    delete response.headers.connection
+    delete response.headers.etag
     delete response.headers['last-modified']
     delete response.headers['cache-control']
 
