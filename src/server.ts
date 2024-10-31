@@ -27,6 +27,7 @@ export const createApp = (
     filteringKey,
     filteringUrl,
     filteringPrompt,
+    filteringTimeout,
   }: AppConfig,
   stampManager?: StampsManager,
 ): Application => {
@@ -154,6 +155,7 @@ export const createApp = (
     filteringKey,
     filteringUrl,
     filteringPrompt,
+    filteringTimeout,
   })
 
   if (homepage) {

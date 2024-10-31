@@ -17,6 +17,7 @@ export interface AppConfig {
   filteringKey: string
   filteringUrl: string
   filteringPrompt: string
+  filteringTimeout: number
 }
 
 export interface ServerConfig {
@@ -58,6 +59,7 @@ export interface FilteringConfig {
   key: string
   url: string
   prompt: string
+  timeout: number
 }
 
 export type StampsConfig = StampsConfigHardcoded | StampsConfigAutobuy | StampsConfigExtends
@@ -148,6 +150,7 @@ export function getAppConfig({
     filteringKey: filteringConfig.key,
     filteringUrl: filteringConfig.url,
     filteringPrompt: filteringConfig.prompt,
+    filteringTimeout: filteringConfig.timeout || 3000,
   }
 }
 
@@ -223,7 +226,7 @@ export function getContentConfig({ BEE_API_URLS, REUPLOAD_PERIOD }: EnvironmentV
 }
 
 export function getFilteringConfig({ FILTERING_CONFIG_FILE }: EnvironmentVariables = {}): FilteringConfig {
-  const NO_FILTERING: FilteringConfig = { active: false, key: '', url: '', prompt: '' }
+  const NO_FILTERING: FilteringConfig = { active: false, key: '', url: '', prompt: '', timeout: 3000 }
 
   if (!FILTERING_CONFIG_FILE) {
     logger.warn('FILTERING_CONFIG_FILE is not defined, filtering is disabled')

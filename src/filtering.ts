@@ -20,7 +20,13 @@ export interface UserMessage {
   username: string
   address: string
 }
-export async function callAI(prompt: string, userInput: string, url: string, token: string): Promise<AIResponse> {
+export async function callAI(
+  prompt: string,
+  userInput: string,
+  url: string,
+  token: string,
+  timeout: number,
+): Promise<AIResponse> {
   const requestBody = {
     messages: [
       {
@@ -35,7 +41,7 @@ export async function callAI(prompt: string, userInput: string, url: string, tok
   }
 
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 3000)
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
 
   const response = await fetch(url, {
     method: 'POST',
@@ -55,6 +61,7 @@ export async function callAI(prompt: string, userInput: string, url: string, tok
 
   if (response.status === 408) {
     logger.error('AI Request timed out')
+
     return { flagged: false, reason: 'AI Request timed out' }
   }
   let retV: AIResponse = { flagged: false, reason: '' }
@@ -71,17 +78,23 @@ export async function callAI(prompt: string, userInput: string, url: string, tok
   return retV
 }
 
-export async function doFiltering(body: Buffer, prompt: string, APIUrl: string, key: string): Promise<Buffer> {
+export async function doFiltering(
+  body: Buffer,
+  prompt: string,
+  APIUrl: string,
+  key: string,
+  timeout: number,
+): Promise<Buffer> {
   const bodyBuffer = Buffer.from(body)
   const userMessage = JSON.parse(bodyBuffer.toString('utf8')) as UserMessage
 
   if (typeof userMessage.message === 'string') {
     userMessage.message = JSON.parse(userMessage.message) as Message
   }
-  const aiResponse = await callAI(prompt, userMessage.message.text, APIUrl, key)
+  const aiResponse = await callAI(prompt, userMessage.message.text, APIUrl, key, timeout)
   userMessage.message.flagged = aiResponse.flagged
   //userMessage.message.reason = aiResponse.reason
-  logger.debug('userMessage', userMessage)
+  //logger.info(JSON.stringify(userMessage))
 
   return Buffer.from(JSON.stringify(userMessage))
 }
