@@ -54,7 +54,8 @@ export async function callAI(prompt: string, userInput: string, url: string, tok
     .finally(() => clearTimeout(timeoutId))
 
   if (response.status === 408) {
-    return { flagged: false, reason: 'Request timed out' }
+    logger.error('AI Request timed out')
+    return { flagged: false, reason: 'AI Request timed out' }
   }
   let retV: AIResponse = { flagged: false, reason: '' }
   try {
