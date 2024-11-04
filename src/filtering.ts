@@ -1,4 +1,3 @@
-import { log } from 'console'
 import { logger } from './logger'
 
 export type AIResponse = {
