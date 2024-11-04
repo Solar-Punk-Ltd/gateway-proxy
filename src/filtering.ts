@@ -62,6 +62,8 @@ export async function callAI(
     .finally(() => clearTimeout(timeoutId))
 
   logger.info(`AI response: ${response}`)
+  const responseBody = await response.text();
+  logger.info(`AI response: ${responseBody}`);
   if (response.status === 408) {
     logger.error('AI Request timed out')
 
