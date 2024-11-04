@@ -1,3 +1,4 @@
+import { log } from 'console'
 import { logger } from './logger'
 
 export type AIResponse = {
@@ -60,6 +61,7 @@ export async function callAI(
     })
     .finally(() => clearTimeout(timeoutId))
 
+  logger.info(`AI response: ${response}`)
   if (response.status === 408) {
     logger.error('AI Request timed out')
 
