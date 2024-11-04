@@ -66,12 +66,13 @@ export async function callAI(
     return { flagged: false, reason: 'AI Request timed out' }
   }
   let retV: AIResponse = { flagged: false, reason: '' }
+  let cleanedResponse = ''
   try {
     const data = await response.json()
-    const cleanedResponse = data.result.response.replace(/```/g, '')
+    cleanedResponse = data.result.response.replace(/`/g, '')
     retV = JSON.parse(cleanedResponse)
   } catch (error) {
-    logger.error('Error parsing response', error)
+    logger.error(`Error parsing response ${cleanedResponse}`, error)
 
     return { flagged: false, reason: 'Error parsing response' }
   }
