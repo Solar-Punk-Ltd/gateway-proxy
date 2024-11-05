@@ -28,6 +28,7 @@ export const createApp = (
     filteringUrl,
     filteringPrompt,
     filteringTimeout,
+    filteringThreshold,
   }: AppConfig,
   stampManager?: StampsManager,
 ): Application => {
@@ -156,6 +157,7 @@ export const createApp = (
     filteringUrl,
     filteringPrompt,
     filteringTimeout,
+    filteringThreshold,
   })
 
   if (homepage) {

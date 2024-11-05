@@ -33,6 +33,7 @@ interface Options {
   filteringUrl: string
   filteringPrompt: string
   filteringTimeout: number
+  filteringThreshold: number
 }
 
 export function createProxyEndpoints(app: Application, options: Options) {
@@ -85,6 +86,7 @@ export function createProxyEndpoints(app: Application, options: Options) {
           options.filteringUrl,
           options.filteringKey,
           options.filteringTimeout,
+          options.filteringThreshold,
         )
         const bodySize = Buffer.byteLength(req.body)
         req.headers['content-length'] = bodySize.toString()

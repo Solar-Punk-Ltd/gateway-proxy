@@ -16,6 +16,7 @@ export interface AppConfig {
   filteringUrl: string
   filteringPrompt: string
   filteringTimeout: number
+  filteringThreshold: number
 }
 
 export interface ServerConfig {
@@ -58,6 +59,7 @@ export interface FilteringConfig {
   url: string
   prompt: string
   timeout: number
+  threshold: number
 }
 
 export type StampsConfig = StampsConfigHardcoded | StampsConfigAutobuy | StampsConfigExtends
@@ -117,6 +119,7 @@ export const DEFAULT_POSTAGE_REFRESH_PERIOD = 60_000
 export const MINIMAL_EXTENDS_TTL_VALUE = 60
 export const READINESS_TIMEOUT_MS = 3000
 export const ERROR_NO_STAMP = 'No postage stamp'
+export const DEFAULT_FILTERING_THRESHOLD = 4
 
 export function getAppConfig({
   BEE_API_URLS,
@@ -149,6 +152,7 @@ export function getAppConfig({
     filteringUrl: filteringConfig.url,
     filteringPrompt: filteringConfig.prompt,
     filteringTimeout: filteringConfig.timeout || 3000,
+    filteringThreshold: filteringConfig.threshold || DEFAULT_FILTERING_THRESHOLD,
   }
 }
 
@@ -224,7 +228,7 @@ export function getContentConfig({ BEE_API_URLS, REUPLOAD_PERIOD }: EnvironmentV
 }
 
 export function getFilteringConfig({ FILTERING_CONFIG_FILE }: EnvironmentVariables = {}): FilteringConfig {
-  const NO_FILTERING: FilteringConfig = { active: false, key: '', url: '', prompt: '', timeout: 3000 }
+  const NO_FILTERING: FilteringConfig = { active: false, key: '', url: '', prompt: '', timeout: 3000, threshold: 4 }
 
   if (!FILTERING_CONFIG_FILE) {
     logger.warn('FILTERING_CONFIG_FILE is not defined, filtering is disabled')
@@ -234,6 +238,10 @@ export function getFilteringConfig({ FILTERING_CONFIG_FILE }: EnvironmentVariabl
 
   try {
     const filteringConfig: FilteringConfig = JSON.parse(FILTERING_CONFIG_FILE)
+
+    if (filteringConfig.threshold === undefined || filteringConfig.threshold < 0) {
+      filteringConfig.threshold = DEFAULT_FILTERING_THRESHOLD
+    }
 
     return { ...filteringConfig, active: true }
   } catch (error) {
