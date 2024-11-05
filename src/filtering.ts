@@ -1,3 +1,4 @@
+import { EnvironmentVariables } from './config'
 import { logger } from './logger'
 
 export type AIResponse = {
@@ -80,6 +81,24 @@ export async function callAI(
   return retV
 }
 
+function addPoint(userMessage: UserMessage) {
+  const { DEVCON_BACKEND_URL, DEVCON_BACKEND_API_KEY } = process.env as EnvironmentVariables
+
+  if (DEVCON_BACKEND_URL && DEVCON_BACKEND_API_KEY) {
+    // only chat messages have address
+    if (!userMessage.address) {
+      fetch(DEVCON_BACKEND_URL + '/addpoints/' + userMessage.username, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${DEVCON_BACKEND_API_KEY}`,
+        },
+      }).catch((error: any) => {
+        logger.error('Error calling backend', error)
+      })
+    }
+  }
+}
+
 export async function doFiltering(
   body: Buffer,
   prompt: string,
@@ -98,6 +117,10 @@ export async function doFiltering(
   if (userMessage.message.text.trim().length > 0) {
     aiResponse = await callAI(prompt, userMessage.message.text, APIUrl, key, timeout)
     userMessage.message.flagged = aiResponse.flagged
+
+    if (!aiResponse.flagged) {
+      addPoint(userMessage)
+    }
   } else {
     userMessage.message.flagged = false
   }

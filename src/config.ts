@@ -106,6 +106,10 @@ export type EnvironmentVariables = Partial<{
 
   // Filtering config file
   FILTERING_CONFIG_FILE: string
+
+  // Devcon comment count
+  DEVCON_BACKEND_URL: string
+  DEVCON_BACKEND_API_KEY: string
 }>
 
 export const DEFAULT_BEE_API_URL = 'http://localhost:1633'
