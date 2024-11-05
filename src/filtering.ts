@@ -105,6 +105,7 @@ export async function doFiltering(
   APIUrl: string,
   key: string,
   timeout: number,
+  threshold: number,
 ): Promise<Buffer> {
   const bodyBuffer = Buffer.from(body)
   const userMessage = JSON.parse(bodyBuffer.toString('utf8')) as UserMessage
@@ -114,7 +115,7 @@ export async function doFiltering(
   }
   let aiResponse: AIResponse = { flagged: false, reason: '' }
 
-  if (userMessage.message.text.trim().length > 0) {
+  if (userMessage.message.text.trim().length >= threshold) {
     aiResponse = await callAI(prompt, userMessage.message.text, APIUrl, key, timeout)
     userMessage.message.flagged = aiResponse.flagged
 
@@ -123,6 +124,7 @@ export async function doFiltering(
     }
   } else {
     userMessage.message.flagged = false
+    logger.info(`skipped: ${userMessage.message.text} - too short`)
   }
 
   if (aiResponse.flagged) {
