@@ -70,10 +70,14 @@ export async function callAI(
   let cleanedResponse = ''
   try {
     const data = await response.json()
-    cleanedResponse = data.result.response.replace(/`/g, '')
+    cleanedResponse = data.result.response.replace(/\n/g, ' ').replace(/`/g, '')
     retV = JSON.parse(cleanedResponse)
   } catch (error) {
     logger.error(`Error parsing response ${cleanedResponse}`, error)
+
+    if (cleanedResponse.match(/"flagged"\s*:\s*true/)) {
+      return { flagged: true, reason: 'Error parsing response - flagged: true' }
+    }
 
     return { flagged: false, reason: 'Error parsing response' }
   }
