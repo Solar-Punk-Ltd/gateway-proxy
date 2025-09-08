@@ -6,7 +6,7 @@ import { subdomainToBzz } from './bzz-link'
 import { logger } from './logger'
 import { StampsManager } from './stamps'
 import { getErrorMessage } from './utils'
-import { doFiltering } from './filtering'
+import { addPoint, doFiltering, MessageData } from './filtering'
 
 export const GET_PROXY_ENDPOINTS = ['/chunks/*', '/bytes/*', '/bzz/*', '/feeds/*']
 export const POST_PROXY_ENDPOINTS = ['/chunks', '/bytes', '/bzz', '/soc/*', '/feeds/*']
@@ -77,24 +77,31 @@ export function createProxyEndpoints(app: Application, options: Options) {
     await fetchAndRespond('GET', req.path, req.query, req.headers, req.body, res, options)
   })
   app.post(POST_PROXY_ENDPOINTS, async (req, res) => {
-    if (options.filteringActive && req.path.startsWith('/bytes') && req.method === 'POST') {
-      const originalBody = req.body
-      try {
-        req.body = await doFiltering(
-          Buffer.from(req.body),
-          options.filteringPrompt,
-          options.filteringUrl,
-          options.filteringKey,
-          options.filteringTimeout,
-          options.filteringThreshold,
-        )
-        const bodySize = Buffer.byteLength(req.body)
-        req.headers['content-length'] = bodySize.toString()
-      } catch (error) {
-        req.body = originalBody
-        logger.error(`proxy failed: ${getErrorMessage(error)}`)
+    if (req.path.startsWith('/bytes') && req.method === 'POST') {
+      if (options.filteringActive) {
+        const originalBody = req.body
+        try {
+          req.body = await doFiltering(
+            Buffer.from(req.body),
+            options.filteringPrompt,
+            options.filteringUrl,
+            options.filteringKey,
+            options.filteringTimeout,
+            options.filteringThreshold,
+          )
+          const bodySize = Buffer.byteLength(req.body)
+          req.headers['content-length'] = bodySize.toString()
+        } catch (error) {
+          req.body = originalBody
+          logger.error(`proxy failed: ${getErrorMessage(error)}`)
+        }
+      } else {
+        const bodyBuffer = Buffer.from(req.body)
+        const userMessage = JSON.parse(bodyBuffer.toString('utf8')) as MessageData
+        addPoint(userMessage)
       }
     }
+
     await fetchAndRespond('POST', req.path, req.query, req.headers, req.body, res, options)
   })
 }
