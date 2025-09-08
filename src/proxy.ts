@@ -7,6 +7,7 @@ import { logger } from './logger'
 import { StampsManager } from './stamps'
 import { getErrorMessage } from './utils'
 import { addPoint, doFiltering, MessageData } from './filtering'
+import { DEFAULT_FILTERING_THRESHOLD } from './config'
 
 export const GET_PROXY_ENDPOINTS = ['/chunks/*', '/bytes/*', '/bzz/*', '/feeds/*']
 export const POST_PROXY_ENDPOINTS = ['/chunks', '/bytes', '/bzz', '/soc/*', '/feeds/*']
@@ -28,12 +29,12 @@ interface Options {
   ensSubdomains?: boolean
   remap: Record<string, string>
   userAgents?: string[]
-  filteringActive: boolean
-  filteringKey: string
-  filteringUrl: string
-  filteringPrompt: string
-  filteringTimeout: number
-  filteringThreshold: number
+  filteringActive?: boolean
+  filteringKey?: string
+  filteringUrl?: string
+  filteringPrompt?: string
+  filteringTimeout?: number
+  filteringThreshold?: number
 }
 
 export function createProxyEndpoints(app: Application, options: Options) {
@@ -83,11 +84,11 @@ export function createProxyEndpoints(app: Application, options: Options) {
         try {
           req.body = await doFiltering(
             Buffer.from(req.body),
-            options.filteringPrompt,
-            options.filteringUrl,
-            options.filteringKey,
-            options.filteringTimeout,
-            options.filteringThreshold,
+            options.filteringPrompt || '',
+            options.filteringUrl || '',
+            options.filteringKey || '',
+            options.filteringTimeout || 3000,
+            options.filteringThreshold || DEFAULT_FILTERING_THRESHOLD,
           )
           const bodySize = Buffer.byteLength(req.body)
           req.headers['content-length'] = bodySize.toString()
