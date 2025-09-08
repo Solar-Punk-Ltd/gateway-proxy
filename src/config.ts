@@ -11,12 +11,12 @@ export interface AppConfig {
   exposeHashedIdentity?: boolean
   readinessCheck?: boolean
   homepage?: string
-  filteringActive: boolean
-  filteringKey: string
-  filteringUrl: string
-  filteringPrompt: string
-  filteringTimeout: number
-  filteringThreshold: number
+  filteringActive?: boolean
+  filteringKey?: string
+  filteringUrl?: string
+  filteringPrompt?: string
+  filteringTimeout?: number
+  filteringThreshold?: number
 }
 
 export interface ServerConfig {

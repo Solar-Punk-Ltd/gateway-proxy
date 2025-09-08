@@ -6,20 +6,26 @@ export type AIResponse = {
   reason: string
 }
 
-export interface Message {
-  text: string
-  messageId?: string
-  threadId?: string
-  parent?: string
-  flagged?: boolean
-  reason?: string
+export declare enum MessageType {
+  TEXT = 'text',
+  THREAD = 'thread',
+  REACTION = 'reaction',
 }
 
-export interface UserMessage {
-  message: Message
-  timestamp: number
+export interface MessageData {
+  id: string
+  type: MessageType
+  message: string
   username: string
-  address?: string
+  address: string
+  timestamp: number
+  index: string
+  topic: string
+  targetMessageId?: string
+  signature?: string
+  flagged?: boolean
+  reason?: string
+  isLegacy?: boolean
 }
 
 export async function callAI(
@@ -85,21 +91,18 @@ export async function callAI(
   return retV
 }
 
-function addPoint(userMessage: UserMessage) {
+export function addPoint(userMessage: MessageData) {
   const { DEVCON_BACKEND_URL, DEVCON_BACKEND_API_KEY } = process.env as EnvironmentVariables
 
   if (DEVCON_BACKEND_URL && DEVCON_BACKEND_API_KEY) {
-    // only chat messages have address
-    if (!userMessage.address) {
-      fetch(DEVCON_BACKEND_URL + '/addpoints/' + userMessage.username, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${DEVCON_BACKEND_API_KEY}`,
-        },
-      }).catch((error: any) => {
-        logger.error('Error calling backend', error)
-      })
-    }
+    fetch(DEVCON_BACKEND_URL + '/addpoints/' + userMessage.username, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${DEVCON_BACKEND_API_KEY}`,
+      },
+    }).catch((error: any) => {
+      logger.error('Error calling backend', error)
+    })
   }
 }
 
@@ -112,27 +115,27 @@ export async function doFiltering(
   threshold: number,
 ): Promise<Buffer> {
   const bodyBuffer = Buffer.from(body)
-  const userMessage = JSON.parse(bodyBuffer.toString('utf8')) as UserMessage
+  const userMessage = JSON.parse(bodyBuffer.toString('utf8')) as MessageData
 
   if (typeof userMessage.message === 'string') {
-    userMessage.message = JSON.parse(userMessage.message) as Message
+    userMessage.message = JSON.parse(userMessage.message) as string
   }
   let aiResponse: AIResponse = { flagged: false, reason: '' }
 
-  if (userMessage.message.text.trim().length >= threshold) {
-    aiResponse = await callAI(prompt, userMessage.message.text, APIUrl, key, timeout)
-    userMessage.message.flagged = aiResponse.flagged
+  if (userMessage.message.trim().length >= threshold) {
+    aiResponse = await callAI(prompt, userMessage.message, APIUrl, key, timeout)
+    userMessage.flagged = aiResponse.flagged
 
     if (!aiResponse.flagged) {
       addPoint(userMessage)
     }
   } else {
-    userMessage.message.flagged = false
-    logger.info(`skipped: ${userMessage.message.text} - too short`)
+    userMessage.flagged = false
+    logger.info(`skipped: ${userMessage.message} - too short`)
   }
 
   if (aiResponse.flagged) {
-    logger.info(`flagged: ${userMessage.message.text} -  ${aiResponse.reason}`)
+    logger.info(`flagged: ${userMessage.message} -  ${aiResponse.reason}`)
   }
 
   return Buffer.from(JSON.stringify(userMessage))
