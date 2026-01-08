@@ -23,6 +23,13 @@ export const createApp = (
     exposeHashedIdentity,
     readinessCheck,
     homepage,
+    cdpApiKeyId,
+    cdpApiKeySecret,
+    x402GlobalPrice,
+    x402Prices,
+    x402WalletAddress,
+    x402Network,
+    x402UsdcAsset,
   }: AppConfig,
   stampManager?: StampsManager,
 ): Application => {
@@ -143,6 +150,13 @@ export const createApp = (
     userAgents: (Arrays.getArgument(process.argv, 'allow-user-agents', process.env, 'ALLOW_USER_AGENTS') || '').split(
       ',',
     ),
+    cdpApiKeyId,
+    cdpApiKeySecret,
+    x402GlobalPrice,
+    x402Prices,
+    x402WalletAddress: x402WalletAddress,
+    x402Network,
+    x402UsdcAsset,
   })
 
   if (homepage) {

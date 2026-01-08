@@ -30,8 +30,13 @@ export default async (): Promise<Config.InitialOptions> => {
     // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
     testPathIgnorePatterns: ['/node_modules/'],
 
+    transformIgnorePatterns: ['node_modules/(?!(@coinbase|@x402)/)'],
+
     moduleNameMapper: {
       axios: 'axios/dist/node/axios.cjs',
+    },
+    transform: {
+      '^.+\\.[tj]sx?$': 'ts-jest',
     },
   }
 }

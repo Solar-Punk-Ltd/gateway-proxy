@@ -9,6 +9,15 @@ export interface AppConfig {
   exposeHashedIdentity?: boolean
   readinessCheck?: boolean
   homepage?: string
+  cdpApiKeyId?: string
+  cdpApiKeySecret?: string
+  x402GlobalPrice?: string
+  x402Prices?: Record<string, string>
+  x402WalletAddress?: string
+  x402Network?: string
+  x402UsdcAsset?: string
+  x402UsdcDomainName?: string
+  x402UsdcDomainVersion?: string
 }
 
 export interface ServerConfig {
@@ -88,6 +97,17 @@ export type EnvironmentVariables = Partial<{
 
   // Homepage
   HOMEPAGE: string
+
+  // x402
+  CDP_API_KEY_ID: string
+  CDP_API_KEY_SECRET: string
+  X402_GLOBAL_PRICE: string
+  X402_PRICES: string
+  X402_WALLET_ADDRESS: string
+  X402_NETWORK: string
+  X402_USDC_ASSET: string
+  X402_USDC_DOMAIN_NAME: string
+  X402_USDC_DOMAIN_VERSION: string
 }>
 
 export const SUPPORTED_LEVELS = ['critical', 'error', 'warn', 'info', 'verbose', 'debug'] as const
@@ -120,7 +140,28 @@ export function getAppConfig({
   EXPOSE_HASHED_IDENTITY,
   READINESS_CHECK,
   HOMEPAGE,
+  CDP_API_KEY_ID,
+  CDP_API_KEY_SECRET,
+  X402_GLOBAL_PRICE,
+  X402_PRICES,
+  X402_WALLET_ADDRESS,
+  X402_NETWORK,
+  X402_USDC_ASSET,
+  X402_USDC_DOMAIN_NAME,
+  X402_USDC_DOMAIN_VERSION,
 }: EnvironmentVariables = {}): AppConfig {
+
+
+  let x402Prices: Record<string, string> | undefined
+  if (X402_PRICES) {
+    try {
+      x402Prices = JSON.parse(X402_PRICES)
+    } catch (e) {
+      // ignore invalid JSON
+      console.warn('Invalid X402_PRICES JSON', e)
+    }
+  }
+
   return {
     hostname: HOSTNAME || DEFAULT_HOSTNAME,
     beeApiUrl: BEE_API_URL || DEFAULT_BEE_API_URL,
@@ -132,6 +173,15 @@ export function getAppConfig({
     exposeHashedIdentity: EXPOSE_HASHED_IDENTITY === 'true',
     readinessCheck: READINESS_CHECK === 'true',
     homepage: HOMEPAGE,
+    cdpApiKeyId: CDP_API_KEY_ID,
+    cdpApiKeySecret: CDP_API_KEY_SECRET,
+    x402GlobalPrice: X402_GLOBAL_PRICE,
+    x402Prices,
+    x402WalletAddress: X402_WALLET_ADDRESS,
+    x402Network: X402_NETWORK || 'eip155:8453',
+    x402UsdcAsset: X402_USDC_ASSET || '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    x402UsdcDomainName: X402_USDC_DOMAIN_NAME || 'USD Coin',
+    x402UsdcDomainVersion: X402_USDC_DOMAIN_VERSION || '2',
   }
 }
 
@@ -185,8 +235,7 @@ export function getStampsConfig({
   // Missing one of the variables needed for the autobuy or extends TTL
   else if (POSTAGE_DEPTH || POSTAGE_AMOUNT || POSTAGE_TTL_MIN) {
     throw new Error(
-      `config: please provide POSTAGE_DEPTH=${POSTAGE_DEPTH}, POSTAGE_AMOUNT=${POSTAGE_AMOUNT}, POSTAGE_TTL_MIN=${POSTAGE_TTL_MIN} ${
-        POSTAGE_EXTENDSTTL === 'true' ? 'at least 60 seconds ' : ''
+      `config: please provide POSTAGE_DEPTH=${POSTAGE_DEPTH}, POSTAGE_AMOUNT=${POSTAGE_AMOUNT}, POSTAGE_TTL_MIN=${POSTAGE_TTL_MIN} ${POSTAGE_EXTENDSTTL === 'true' ? 'at least 60 seconds ' : ''
       }for the feature to work`,
     )
   }

@@ -6,6 +6,7 @@ import { subdomainToBzz } from './bzz-link'
 import { logger } from './logger'
 import { StampsManager } from './stamps'
 import { getErrorMessage } from './utils'
+import { X402PaymentService } from './x402'
 
 export const GET_PROXY_ENDPOINTS = ['/chunks/*', '/bytes/*', '/bzz/*', '/feeds/*']
 export const POST_PROXY_ENDPOINTS = ['/chunks', '/bytes', '/bzz', '/soc/*', '/feeds/*']
@@ -24,9 +25,31 @@ interface Options {
   ensSubdomains?: boolean
   remap: Record<string, string>
   userAgents?: string[]
+  cdpApiKeyId?: string
+  cdpApiKeySecret?: string
+  x402GlobalPrice?: string
+  x402Prices?: Record<string, string>
+  x402WalletAddress?: string
+  x402Network?: string
+  x402UsdcAsset?: string
 }
 
 export function createProxyEndpoints(app: Application, options: Options) {
+  const paymentService = new X402PaymentService({
+    cdpApiKeyId: options.cdpApiKeyId,
+    cdpApiKeySecret: options.cdpApiKeySecret,
+    x402GlobalPrice: options.x402GlobalPrice,
+    x402Prices: options.x402Prices || {},
+    x402WalletAddress: options.x402WalletAddress,
+    x402Network: options.x402Network,
+    x402UsdcAsset: options.x402UsdcAsset,
+    beeApiUrl: options.beeApiUrl // redundant but needed for type satisfaction if strict
+  } as any) // Casting as we are passing partial config that fits AppConfig for X402 service
+
+  app.use(async (req, res, next) => {
+    await paymentService.middleware(req, res, next)
+  })
+
   app.use(async (req, res, next) => {
     const subdomain = options.hostname && req.hostname ? Strings.before(req.hostname, options.hostname) : null
 
