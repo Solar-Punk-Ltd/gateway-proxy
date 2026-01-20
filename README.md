@@ -34,6 +34,7 @@ newer Bee versions is not recommended and may not work. Stay up to date by joini
   - [Environment variables](#environment-variables)
   - [Curl](#curl)
 - [API](#api)
+- [X402 Payment Support](#x402-payment-support)
 - [Maintainers](#maintainers)
 - [License](#license)
 
@@ -154,7 +155,16 @@ npm run start
 | REMAP                   | undefined                                                        | Semicolon separated `name=hash` values to rewrite Swarm hashes to human-friendly names                                                                                      |
 | ALLOWLIST               | undefined                                                        | Comma separated list of hashes, ENS domains or CIDs to allow                                                                                                                |
 | ALLOW_USER_AGENTS       | undefined                                                        | Comma separated list of user-agent substrings to give unlimited access to                                                                                                   |
-| POST_SIZE_LIMIT         | 1gb                                                              | Maximum size of the POST request body in bytes.                                                                                                                             |
+| POST_SIZE_LIMIT         | 1gb                                                              | Maximum size of the POST request body in bytes.                                                             |
+| CDP_API_KEY_ID          | undefined                                                        | Coinbase Developer Platform API Key ID (required for x402 verification).                                    |
+| CDP_API_KEY_SECRET      | undefined                                                        | Coinbase Developer Platform API Key Secret (required for x402 verification).                                |
+| X402_GLOBAL_PRICE       | undefined                                                        | Global price for all endpoints (e.g. "0.05").                                                               |
+| X402_PRICES             | undefined                                                        | JSON object mapping paths to prices (e.g. `{"/bzz/*": "0.10"}`).                                            |
+| X402_WALLET_ADDRESS     | 0x000...000                                                      | Wallet address to receive payments.                                                                         |
+| X402_NETWORK            | eip155:8453                                                      | Network for payments (Base mainnet). Use `eip155:84532` for Base Sepolia.                                   |
+| X402_USDC_ASSET         | 0x833...913                                                      | USDC contract address (Base mainnet).                                                                       |
+| X402_USDC_DOMAIN_NAME   | USD Coin                                                         | USDC domain name for EIP-712 signing.                                                                       |
+| X402_USDC_DOMAIN_VERSION | 2                                                                | USDC domain version for EIP-712 signing.                                                                    |
 
 ### Curl
 
@@ -200,6 +210,83 @@ curl \
 | `POST /soc/:owner/:id`      | `201`, `403`, ... | See official [bee documentation](https://docs.ethswarm.org/api/#tag/Single-owner-chunk/paths/~1soc~1{owner}~1{id}/post) |
 | `GET /feeds/:owner/:topic`  | `200`, `403`, ... | See official [bee documentation](https://docs.ethswarm.org/api/#tag/Feed/paths/~1feeds~1{owner}~1{topic}/get)           |
 | `POST /feeds/:owner/:topic` | `201`, `403`, ... | See official [bee documentation](https://docs.ethswarm.org/api/#tag/Feed/paths/~1feeds~1{owner}~1{topic}/post)          |
+
+## X402 Payment Support
+
+Gateway proxy supports the [x402 protocol](https://x402.org) for monetizing access to Swarm content. When enabled, requests to protected paths will return a `402 Payment Required` status if a valid payment signature is not provided.
+
+### Configuration
+
+You can enable x402 by setting the `X402_PRICES` environment variable with a JSON object mapping path patterns to prices in USDC.
+
+Example `x402_prices_example.json`:
+
+```json
+{
+    "/bzz/*": "0.10",
+    "/bytes/*": "0.05",
+    "/feeds/*": "0.15",
+    "/soc/*": "0.20",
+    "/chunks/*": "0.01",
+    "/readiness": "0.00"
+}
+```
+
+To use this configuration:
+
+```sh
+export X402_PRICES=$(cat x402_prices_example.json)
+export X402_WALLET_ADDRESS="0xYourWalletAddress"
+export CDP_API_KEY_ID="your-cdp-id"
+export CDP_API_KEY_SECRET="your-cdp-secret"
+export X402_NETWORK="eip155:84532" # Base Sepolia for testing
+
+npm run start
+```
+
+### Testing
+
+You can use the provided `test-buyer-x402.ts` script to test the payment flow. This script simulates a buyer who receives a 402 error, makes a payment, and retries the request with the payment signature.
+
+Run the test script:
+
+```sh
+npx ts-node -T test-buyer-x402.ts
+```
+
+Example output:
+
+```
+Starting x402 buyer test...
+Target URL: http://localhost:3000/bytes/979d20573f6e2a3aa52402b90bb9ac3d66f1b7b99e255bff7f8ea0917318e9e5
+Using wallet address: 0xce2997Dbf5F90E555bE7f4a4F97f5DdF7Eac3DE4
+Making request...
+Status: 200 OK
+Response Body: This is Demo content on Swarm.
+✅ Payment settled successfully!
+Payment Receipt: {
+  "success": true,
+  "transaction": "0xc7229db4db5446fed31640602aa47b55d6a992c04ea5a84e7bc2ec0649bd9427",
+  "network": "eip155:84532",
+  "payer": "0xce2997Dbf5F90E555bE7f4a4F97f5DdF7Eac3DE4",
+  "requirements": {
+    "scheme": "exact",
+    "network": "eip155:84532",
+    "amount": "5000",
+    "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    "payTo": "0x258c163d467a487c3EB447A522b0d940174B4649",
+    "maxTimeoutSeconds": 300,
+    "extra": {
+      "name": "USDC",
+      "version": "2"
+    },
+    "domain": {
+      "name": "USDC",
+      "version": "2"
+    }
+  }
+}
+```
 
 ## Contribute
 
